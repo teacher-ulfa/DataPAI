@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIAP SMANIKRE - Sistem Informasi & Absensi PAI</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Family Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- HTML5 QR Code Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <!-- QRCode.js Library for generating student QR code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="h-full text-slate-800 antialiased selection:bg-emerald-500 selection:text-white">
+
+  <div id="app" class="min-h-full flex flex-col">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-x-full transition-transform duration-300 ease-in-out max-w-md bg-white border border-slate-200 shadow-2xl rounded-2xl p-4 flex items-start gap-3 pointer-events-auto">
+      <div id="toastIcon" class="p-2 rounded-xl text-white bg-emerald-600 flex-shrink-0">
+        <i data-lucide="check-circle" class="w-5 h-5"></i>
+      </div>
+      <div class="flex-1 pr-2">
+        <h4 id="toastTitle" class="font-bold text-sm text-slate-900">Pemberitahuan</h4>
+        <p id="toastMessage" class="text-xs text-slate-600 mt-0.5">Pesan sistem di sini.</p>
+      </div>
+      <button onclick="closeToast()" class="text-slate-400 hover:text-slate-600 p-1">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- 1. HALAMAN MUKA / LOGIN SCREEN -->
+    <div id="loginScreen" class="min-h-screen bg-gradient-to-br from-emerald-900 via-teal-800 to-sky-900 flex items-center justify-center p-4">
+      <div class="w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 md:p-8 relative overflow-hidden">
+        
+        <!-- Decorative blobs -->
+        <div class="absolute -top-12 -right-12 w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl"></div>
+        <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-sky-400/20 rounded-full blur-2xl"></div>
+
+        <!-- Header & Logo SMANIKRE -->
+        <div class="text-center relative z-10">
+          <div class="inline-block p-2 bg-emerald-50 rounded-2xl mb-3 shadow-inner">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhjhEe7DsQaweQWtckuBY0QdRPB_J0RbHqfSXb0fFnNGOQYwfzbn9SyTV1WORteNpd7S3rcGj3FYpaCf0X7tjQpcXoDfErD-aWPD9kTf-6auJIoAZ3ETmXpvuoVydS7H87HO-vidqv4ECyayUG4dFJNZNMuVWD2lUyaMaF7ox5BYCfAksicgx7ryvy6V56Z/s1600/LOGO%20SMANIKRE%20(1).png" 
+                 alt="Logo SMANIKRE" 
+                 class="h-24 w-24 object-contain mx-auto drop-shadow-md transform hover:scale-105 transition-transform duration-300">
+          </div>
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">SMA Negeri 1 Krembung</h1>
+          <div class="mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs">
+            <i data-lucide="book-open-check" class="w-3.5 h-3.5"></i>
+            Aplikasi SIAP
+          </div>
+          <p class="text-xs text-slate-500 mt-1 font-medium">Sistem Informasi dan Absensi PAI</p>
+          <p class="text-xs text-slate-600 mt-2 italic bg-slate-50 py-1.5 px-3 rounded-lg border border-slate-100">"Selamat datang di Aplikasi SIAP SMANIKRE"</p>
+        </div>
+
+        <!-- Tab Role Selector -->
+        <div class="mt-6 flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
+          <button type="button" id="btnRoleMurid" onclick="setLoginRole('murid')" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 bg-white text-emerald-700 shadow-sm">
+            <i data-lucide="user" class="w-4 h-4"></i> Murid
+          </button>
+          <button type="button" id="btnRoleGuru" onclick="setLoginRole('guru')" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900">
+            <i data-lucide="graduation-cap" class="w-4 h-4"></i> Guru
+          </button>
+        </div>
+
+        <!-- Login Form -->
+        <form onsubmit="handleLogin(event)" class="mt-5 space-y-4 relative z-10">
+          <input type="hidden" id="loginRole" value="murid">
+
+          <div>
+            <label id="lblUsername" class="block text-xs font-bold text-slate-700 mb-1">NIS (Nomor Induk Siswa)</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i data-lucide="user-check" class="w-4 h-4"></i>
+              </span>
+              <input type="text" id="loginUsername" required placeholder="Masukkan NIS / NIP" 
+                     class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label id="lblPassword" class="block text-xs font-bold text-slate-700 mb-1">Password (Gunakan NIS)</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i data-lucide="key-round" class="w-4 h-4"></i>
+              </span>
+              <input type="password" id="loginPassword" required placeholder="Masukkan password" 
+                     class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none">
+            </div>
+            <p id="passwordHint" class="text-[11px] text-slate-500 mt-1 italic">*Gunakan NIS anda sebagai password default murid.</p>
+          </div>
+
+          <button type="submit" id="btnLoginSubmit" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 active:scale-[0.99]">
+            <i data-lucide="log-in" class="w-4 h-4"></i>
+            <span>Masuk Aplikasi</span>
+          </button>
+        </form>
+
+        <div class="mt-6 text-center text-[11px] text-slate-400">
+          &copy; 2026 SMAN 1 Krembung - Tim PAI SMANIKRE
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MAIN APPLICATION INTERFACE (DASHBOARD & MENUS) -->
+    <div id="mainScreen" class="hidden min-h-screen flex flex-col bg-slate-100">
+      
+      <!-- Top Navbar -->
+      <header class="bg-gradient-to-r from-emerald-800 to-teal-900 text-white sticky top-0 z-30 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          
+          <div class="flex items-center gap-3">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhjhEe7DsQaweQWtckuBY0QdRPB_J0RbHqfSXb0fFnNGOQYwfzbn9SyTV1WORteNpd7S3rcGj3FYpaCf0X7tjQpcXoDfErD-aWPD9kTf-6auJIoAZ3ETmXpvuoVydS7H87HO-vidqv4ECyayUG4dFJNZNMuVWD2lUyaMaF7ox5BYCfAksicgx7ryvy6V56Z/s1600/LOGO%20SMANIKRE%20(1).png" 
+                 alt="SMANIKRE" class="w-9 h-9 object-contain bg-white/10 p-1 rounded-lg">
+            <div>
+              <div class="font-extrabold text-sm sm:text-base leading-tight tracking-wide">SIAP SMANIKRE</div>
+              <div class="text-[10px] text-emerald-200">SMA Negeri 1 Krembung</div>
+            </div>
+          </div>
+
+          <!-- User Profile & Logout -->
+          <div class="flex items-center gap-3">
+            <div class="hidden sm:block text-right">
+              <div id="navUserName" class="text-xs font-bold text-white">Pengguna</div>
+              <div id="navUserRole" class="text-[10px] text-emerald-300">Pengguna SIAP</div>
+            </div>
+            <div id="userAvatar" class="w-9 h-9 rounded-xl bg-emerald-600 border border-emerald-400 flex items-center justify-center font-bold text-white text-sm">
+              U
+            </div>
+            <button onclick="handleLogout()" title="Keluar" class="p-2 text-emerald-200 hover:text-white hover:bg-emerald-700/50 rounded-xl transition-colors">
+              <i data-lucide="log-out" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+        </div>
+      </header>
+
+      <!-- Main Layout Content with Sidebar & Body -->
+      <div class="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col md:flex-row gap-6">
+        
+        <!-- Sidebar Navigation (Desktop) -->
+        <aside class="hidden md:block w-64 flex-shrink-0">
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sticky top-22 space-y-1">
+            <div class="px-3 py-2 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Menu Utama</div>
+            
+            <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-emerald-700 bg-emerald-50">
+              <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+            </button>
+            <button onclick="navigateTo('scan')" id="nav-scan" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i data-lucide="qr-code" class="w-4 h-4"></i> <span id="navScanText">Kartu Absensi & Presensi</span>
+            </button>
+            <button onclick="navigateTo('datasiswa')" id="nav-datasiswa" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i data-lucide="users" class="w-4 h-4"></i> Data Siswa
+            </button>
+            <button onclick="navigateTo('dataguru')" id="nav-dataguru" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i data-lucide="user-check" class="w-4 h-4"></i> Data Guru
+            </button>
+            <button onclick="navigateTo('kelola')" id="nav-kelola" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i data-lucide="edit-3" class="w-4 h-4"></i> Kelola Absen
+            </button>
+            <button onclick="navigateTo('laporan')" id="nav-laporan" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Laporan Absensi
+            </button>
+          </div>
+        </aside>
+
+        <!-- Dynamic Content Area -->
+        <main class="flex-1 min-w-0">
+
+          <!-- PAGE 1: DASHBOARD -->
+          <div id="page-dashboard" class="page-content space-y-6">
+            <!-- Banner Welcome -->
+            <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-700 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
+              <div class="relative z-10">
+                <span class="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-semibold mb-2">SIAP - SMAN 1 Krembung</span>
+                <h2 id="dashWelcome" class="text-xl sm:text-2xl font-bold">Selamat Datang!</h2>
+                <p class="text-xs sm:text-sm text-emerald-100 mt-1 max-w-xl">Lakukan presensi dengan mudah menggunakan QR Code, serta pantau rekapan absensi Pendidikan Agama Islam secara real-time.</p>
+                <div id="dashGpsBadge" class="mt-4 inline-flex items-center gap-2 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-medium">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  <span id="dashGpsText">📍 Memeriksa Lokasi GPS...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Cards Stat -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-xl">
+                  <i data-lucide="user-check" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <div class="text-[11px] font-semibold text-slate-500">Hadir Masuk</div>
+                  <div id="statMasuk" class="text-lg font-bold text-slate-800">0</div>
+                </div>
+              </div>
+
+              <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                <div class="p-3 bg-sky-100 text-sky-700 rounded-xl">
+                  <i data-lucide="log-out" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <div class="text-[11px] font-semibold text-slate-500">Hadir Pulang</div>
+                  <div id="statPulang" class="text-lg font-bold text-slate-800">0</div>
+                </div>
+              </div>
+
+              <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                <div class="p-3 bg-amber-100 text-amber-700 rounded-xl">
+                  <i data-lucide="file-text" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <div class="text-[11px] font-semibold text-slate-500">Izin / Sakit</div>
+                  <div id="statIzin" class="text-lg font-bold text-slate-800">0</div>
+                </div>
+              </div>
+
+              <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                <div class="p-3 bg-purple-100 text-purple-700 rounded-xl">
+                  <i data-lucide="award" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <div class="text-[11px] font-semibold text-slate-500">Dispensasi</div>
+                  <div id="statDispen" class="text-lg font-bold text-slate-800">0</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Activity Table -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                  <i data-lucide="clock" class="w-4 h-4 text-emerald-600"></i> Activity Log Presensi Terbaru
+                </h3>
+                <button onclick="navigateTo('laporan')" class="text-xs text-emerald-600 hover:text-emerald-800 font-semibold">Lihat Semua &rarr;</button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-100">
+                    <tr>
+                      <th class="p-2.5">Waktu</th>
+                      <th class="p-2.5">Nama Siswa</th>
+                      <th class="p-2.5">NIS</th>
+                      <th class="p-2.5">Status</th>
+                      <th class="p-2.5">Keterangan</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tblRecentLog" class="divide-y divide-slate-100">
+                    <tr><td colspan="5" class="text-center py-4 text-slate-400">Memuat log presensi...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGE 2: SCAN ABSENSI / KARTU QR -->
+          <div id="page-scan" class="page-content hidden space-y-6">
+            
+            <!-- Views for Guru: Live QR Camera Scanner -->
+            <div id="viewScanGuru" class="space-y-6">
+              <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm text-center max-w-xl mx-auto">
+                <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold mb-3">
+                  <i data-lucide="camera" class="w-4 h-4"></i> Mode Guru: Scan QR Murid
+                </div>
+                <h3 class="font-bold text-slate-800 text-base">Arahkan Kamera ke QR Code Kartu Murid</h3>
+                <p class="text-xs text-slate-500 mt-1">Sistem akan otomatis mengenali NIS murid dan mencatat kehadiran ke Google Sheets.</p>
+
+                <!-- Scanner Container -->
+                <div class="mt-5 relative bg-slate-900 rounded-2xl overflow-hidden shadow-inner border border-slate-800 min-h-[280px] flex items-center justify-center">
+                  <div id="qr-reader" class="w-full"></div>
+                  <div id="qrScanOverlay" class="absolute inset-0 border-2 border-dashed border-emerald-400/70 rounded-2xl pointer-events-none flex items-center justify-center">
+                    <span class="text-xs text-emerald-300 bg-black/60 px-3 py-1 rounded-full">Pindai QR Code di sini</span>
+                  </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="mt-4 flex justify-center gap-3">
+                  <button onclick="startQrScanner()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition flex items-center gap-2">
+                    <i data-lucide="play" class="w-4 h-4"></i> Mulai Kamera
+                  </button>
+                  <button onclick="stopQrScanner()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-300 transition flex items-center gap-2">
+                    <i data-lucide="square" class="w-4 h-4"></i> Stop Kamera
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Views for Murid: Show Kartu QR Murid & Manual Self-Presensi -->
+            <div id="viewScanMurid" class="space-y-6">
+              <div class="max-w-md mx-auto bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+                <!-- Header Kartu -->
+                <div class="bg-gradient-to-r from-emerald-800 to-teal-900 p-5 text-white text-center relative">
+                  <div class="flex items-center justify-center gap-2 mb-1">
+                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhjhEe7DsQaweQWtckuBY0QdRPB_J0RbHqfSXb0fFnNGOQYwfzbn9SyTV1WORteNpd7S3rcGj3FYpaCf0X7tjQpcXoDfErD-aWPD9kTf-6auJIoAZ3ETmXpvuoVydS7H87HO-vidqv4ECyayUG4dFJNZNMuVWD2lUyaMaF7ox5BYCfAksicgx7ryvy6V56Z/s1600/LOGO%20SMANIKRE%20(1).png" 
+                         alt="SMANIKRE" class="w-7 h-7 object-contain">
+                    <span class="font-extrabold text-sm tracking-wide">KARTU PRESENSI DIGITAL</span>
+                  </div>
+                  <div class="text-[10px] text-emerald-200">SMA Negeri 1 Krembung - SIAP PAI</div>
+                </div>
+
+                <!-- Card Body & QR -->
+                <div class="p-6 text-center space-y-4">
+                  <div class="flex justify-center py-2">
+                    <div id="qrcodeDisplay" class="p-3 bg-white border-2 border-slate-200 rounded-2xl shadow-inner"></div>
+                  </div>
+
+                  <div>
+                    <h3 id="cardStudentName" class="font-bold text-slate-800 text-lg">Nama Siswa</h3>
+                    <p id="cardStudentNis" class="text-xs font-semibold text-emerald-700 mt-0.5">NIS: -</p>
+                    <p id="cardStudentClass" class="text-xs text-slate-500">Kelas: -</p>
+                  </div>
+
+                  <p class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                    Tunjukkan QR Code ini kepada Guru untuk di-scan, atau lakukan Mandiri di bawah ini.
+                  </p>
+
+                  <hr class="border-slate-100">
+
+                  <!-- Self Presensi Form for Murid -->
+                  <form onsubmit="handleSelfPresensi(event)" class="space-y-3 text-left">
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 mb-1">Kategori / Kegiatan Presensi PAI</label>
+                      <select id="selfKategori" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="Kehadiran di Kelas PAI">Kehadiran di Kelas PAI</option>
+                        <option value="Sholat Dhuha">Sholat Dhuha</option>
+                        <option value="Sholat Dzuhur">Sholat Dzuhur</option>
+                        <option value="Sholat Ashar">Sholat Ashar</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 mb-1">Status / Keterangan Kehadiran</label>
+                      <select id="selfKeterangan" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="Hadir / Tepat Waktu">Hadir / Tepat Waktu (Berjamaah)</option>
+                        <option value="Sakit">Sakit</option>
+                        <option value="Ijin">Ijin</option>
+                        <option value="Alpha">Alpha</option>
+                        <option value="Dispensasi">Dispensasi</option>
+                        <option value="Halangan / Haid (Khusus Putri)">Halangan / Haid (Khusus Sholat)</option>
+                      </select>
+                    </div>
+
+                    <button type="submit" id="btnSelfPresensi" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-2">
+                      <i data-lucide="send" class="w-4 h-4"></i> Kirim Presensi Mandiri
+                    </button>
+                  </form>
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- PAGE 3: DATA SISWA -->
+          <div id="page-datasiswa" class="page-content hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                <div>
+                  <h3 class="font-bold text-base text-slate-800">Master Data Siswa SMANIKRE</h3>
+                  <p class="text-xs text-slate-500">Daftar murid terdaftar dalam sistem SIAP PAI.</p>
+                </div>
+                <input type="text" id="searchSiswa" onkeyup="filterTabelSiswa()" placeholder="Cari nama atau NIS..." 
+                       class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 w-full sm:w-64">
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-100">
+                    <tr>
+                      <th class="p-3">NIS</th>
+                      <th class="p-3">Nama Lengkap</th>
+                      <th class="p-3">Kelas</th>
+                      <th class="p-3">Jenis Kelamin</th>
+                      <th class="p-3 text-center">Kartu QR</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tblMasterSiswa" class="divide-y divide-slate-100">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGE 4: DATA GURU -->
+          <div id="page-dataguru" class="page-content hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <div class="mb-4">
+                <h3 class="font-bold text-base text-slate-800">Master Data Guru & Pengajar</h3>
+                <p class="text-xs text-slate-500">Daftar guru Pendidikan Agama Islam SMA Negeri 1 Krembung.</p>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-100">
+                    <tr>
+                      <th class="p-3">NIP</th>
+                      <th class="p-3">Nama Guru</th>
+                      <th class="p-3">Mata Pelajaran</th>
+                      <th class="p-3">Kontak</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tblMasterGuru" class="divide-y divide-slate-100">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGE 5: KELOLA ABSEN -->
+          <div id="page-kelola" class="page-content hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 max-w-xl mx-auto">
+              <h3 class="font-bold text-base text-slate-800 mb-1">Input / Edit Presensi Manual</h3>
+              <p class="text-xs text-slate-500 mb-4">Fitur khusus Guru / Administrator untuk menginputkan absensi murid secara manual.</p>
+
+              <form onsubmit="handleManualInput(event)" class="space-y-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Siswa</label>
+                  <select id="kelolaSelectSiswa" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
+                    <!-- Dynamic Options -->
+                  </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Kategori Kegiatan</label>
+                    <select id="kelolaStatus" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
+                      <option value="Kehadiran di Kelas PAI">Kehadiran di Kelas PAI</option>
+                      <option value="Sholat Dhuha">Sholat Dhuha</option>
+                      <option value="Sholat Dzuhur">Sholat Dzuhur</option>
+                      <option value="Sholat Ashar">Sholat Ashar</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Keterangan Status</label>
+                    <select id="kelolaKeterangan" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
+                      <option value="Hadir / Tepat Waktu">Hadir / Tepat Waktu</option>
+                      <option value="Sakit">Sakit</option>
+                      <option value="Ijin">Ijin</option>
+                      <option value="Alpha">Alpha</option>
+                      <option value="Dispensasi">Dispensasi</option>
+                      <option value="Halangan / Haid (Khusus Putri)">Halangan / Haid</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button type="submit" id="btnSimpanKelola" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-2">
+                  <i data-lucide="check" class="w-4 h-4"></i> Simpan Data Presensi
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- PAGE 6: LAPORAN ABSENSI -->
+          <div id="page-laporan" class="page-content hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                <div>
+                  <h3 class="font-bold text-base text-slate-800">Laporan Rekap Presensi PAI</h3>
+                  <p class="text-xs text-slate-500">Data tersimpan di Sheet "Data_Murid".</p>
+                </div>
+                <button onclick="exportToCsv()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-2">
+                  <i data-lucide="download" class="w-4 h-4"></i> Export CSV
+                </button>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-100">
+                    <tr>
+                      <th class="p-3">Timestamp</th>
+                      <th class="p-3">Nama Siswa</th>
+                      <th class="p-3">NIS</th>
+                      <th class="p-3">Status</th>
+                      <th class="p-3">Keterangan</th>
+                      <th class="p-3">Koordinat GPS</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tblLaporanAbsen" class="divide-y divide-slate-100">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+
+      <!-- Bottom Navigation for Mobile -->
+      <nav class="md:hidden bg-white border-t border-slate-200 fixed bottom-0 inset-x-0 z-30 flex justify-around p-2 shadow-lg">
+        <button onclick="navigateTo('dashboard')" id="mb-dashboard" class="flex flex-col items-center gap-1 p-1 text-emerald-600 font-bold text-[10px]">
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+        </button>
+        <button onclick="navigateTo('scan')" id="mb-scan" class="flex flex-col items-center gap-1 p-1 text-slate-500 font-bold text-[10px]">
+          <i data-lucide="qr-code" class="w-5 h-5"></i> Presensi
+        </button>
+        <button onclick="navigateTo('datasiswa')" id="mb-datasiswa" class="flex flex-col items-center gap-1 p-1 text-slate-500 font-bold text-[10px]">
+          <i data-lucide="users" class="w-5 h-5"></i> Siswa
+        </button>
+        <button onclick="navigateTo('laporan')" id="mb-laporan" class="flex flex-col items-center gap-1 p-1 text-slate-500 font-bold text-[10px]">
+          <i data-lucide="file-spreadsheet" class="w-5 h-5"></i> Laporan
+        </button>
+      </nav>
+
+    </div>
+
+    <!-- Modal Preview QR Siswa -->
+    <div id="qrModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
+        <button onclick="closeQrModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+        <h3 class="font-bold text-slate-800 text-base mb-1">Kartu Presensi Siswa</h3>
+        <p id="modalStudentName" class="text-xs font-semibold text-emerald-700">Nama Siswa</p>
+        
+        <div class="my-4 flex justify-center">
+          <div id="modalQrCode" class="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm"></div>
+        </div>
+
+        <p id="modalStudentNis" class="text-xs text-slate-500">NIS: -</p>
+        <button onclick="closeQrModal()" class="mt-4 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">Tutup</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // State Aplikasi Global
+    let currentUser = null;
+    let userLocation = "GPS Tidak Aktif";
+    let html5QrScanner = null;
+    
+    // Data Siswa Kelas XII SMANKREZ 2026
+    let mockSiswa = [
+      // XII-1
+      { nis: "11731", nama: "ADAMA SEPTIAN KURNIAWAN", kelas: "XII-1", jk: "Laki-laki" },
+      { nis: "11875", nama: "AJENG PUTRI RAHMAWATI", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11803", nama: "AKBAR PUTRA JAYA WARDANA", kelas: "XII-1", jk: "Laki-laki" },
+      { nis: "11766", nama: "ALFINO DAGHFAQ HERO YURIZKY", kelas: "XII-1", jk: "Laki-laki" },
+      { nis: "11696", nama: "ALIYA NUR FATMAWATI", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11698", nama: "ANDINI MAULIDYA PUTRI HARIADI", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11807", nama: "ARDINI ESHAN PUTRI", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11662", nama: "ARDYANDRA ZHAFAREL ADITYA", kelas: "XII-1", jk: "Laki-laki" },
+      { nis: "11917", nama: "ARINDA RAMADANI PRATIWI", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11734", nama: "ARTHALYTA EKA YUNIAR", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11920", nama: "AULIA LAILIL MURRO", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11665", nama: "AYU DWI PUTRI", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11847", nama: "BAMBANG NARYAMA MAHRUS BHANURASMI", kelas: "XII-1", jk: "Laki-laki" },
+      { nis: "11700", nama: "CHISVIA AYU MEYSHARA", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11927", nama: "ELHA KARTIKA AYU", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11712", nama: "KAYLA RENATA DWI CAHYANI", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11778", nama: "KEVIN CAHYO ADI KUSUMA WARDANI", kelas: "XII-1", jk: "Laki-laki" },
+      { nis: "11821", nama: "KEYLLA SALSABILA", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11714", nama: "KEYSHA OKTAVIA MEYLINDA", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11779", nama: "KHAILLAH DESTI ASTUTI", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11960", nama: "LAURA SILVI ARFENTI", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11746", nama: "MAYLA DEA ALFISYAHRINA", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11673", nama: "MOHAMMAD BINTANG RAMADHAN", kelas: "XII-1", jk: "Laki-laki" },
+      { nis: "11750", nama: "MUHAMMAD ALFIYAN ADI NUGRAHA", kelas: "XII-1", jk: "Laki-laki" },
+      { nis: "11785", nama: "MUHAMMAD REZA PAHLEVI", kelas: "XII-1", jk: "Laki-laki" },
+      { nis: "11683", nama: "NASYWA AULIA RAHMAH", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11787", nama: "NASYWA EVANIA BRILIANTY", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11866", nama: "QONITA HAFIZHOTUL AZKA", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11721", nama: "RAFFI RADITYA AQILA", kelas: "XII-1", jk: "Laki-laki" },
+      { nis: "11791", nama: "RAHMA REIS AULIA", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11972", nama: "RAUDHATUL AULIA", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11904", nama: "SINTA RAMADANI", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11905", nama: "SYAFA NUR FADZILA", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11835", nama: "VELINSYA FEBIANTI CHAKIMAH", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11909", nama: "ZAHWA NOVA ADELYA", kelas: "XII-1", jk: "Perempuan" },
+      { nis: "11945", nama: "ZAIN MAULIDIA SAVITRI", kelas: "XII-1", jk: "Perempuan" },
+
+      // XII-2
+      { nis: "11729", nama: "ABDILLAH RIFQI AN-NIZAR", kelas: "XII-2", jk: "Laki-laki" },
+      { nis: "11983", nama: "AISYAH RAHMA PRATIWI", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11986", nama: "ALIEF DINDYA SETYA GARINI", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "12018", nama: "ALMAGHFIRA RAMADHANI", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11697", nama: "AMANDA FITRI AULIA", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11767", nama: "ANITA DWI NOVIYANTI", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "12057", nama: "APRILIA NINDYA KIRANA", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11919", nama: "ATIKHA CAHYA NINGRUM", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11846", nama: "AZHYLLA AZ-NAZWA PUTRI HERYANA", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11737", nama: "DEBRINA PARWATI ANANDA WADIRA", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11954", nama: "DESY KARTIKA SARI", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11702", nama: "DEVITA DWI DAMAYANTI", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "12030", nama: "DEWI WIDOWATI", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "12066", nama: "FADIYA ZULFA AL MAGHFIROH", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11740", nama: "FAHRI MUHAMMAD MAULUDIN", kelas: "XII-2", jk: "Laki-laki" },
+      { nis: "12035", nama: "FATTAN ARTHA WASKITA", kelas: "XII-2", jk: "Laki-laki" },
+      { nis: "11707", nama: "FIRA SETYANINGRUM", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11816", nama: "GISELLA AMANDA PUTRI", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11857", nama: "HAJRIAH SETIAWATI", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11858", nama: "IMANUEL BAGUS CHRISTYANTO", kelas: "XII-2", jk: "Laki-laki" },
+      { nis: "11999", nama: "LAILA ROSIDA", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11744", nama: "M. ABIDZAR AL GHIFARI", kelas: "XII-2", jk: "Laki-laki" },
+      { nis: "11825", nama: "MOCHAMAD ARYA YOVANA", kelas: "XII-2", jk: "Laki-laki" },
+      { nis: "12042", nama: "MUHAMMAD RIZAL KHULAFAURROSIDIN", kelas: "XII-2", jk: "Laki-laki" },
+      { nis: "12081", nama: "PRANANDA ALVINZA WAHYUDI", kelas: "XII-2", jk: "Laki-laki" },
+      { nis: "12047", nama: "PUTRI AYU AULIA", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11937", nama: "RAFEL NICKY PRATAMA", kelas: "XII-2", jk: "Laki-laki" },
+      { nis: "12009", nama: "RAHMANIA DWI UTARI", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11794", nama: "RETNO ANGGORO KASIH", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11832", nama: "RISCA PUTRI ARSONO", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11759", nama: "RIZKY PUTRA MAHARDIKKA", kelas: "XII-2", jk: "Laki-laki" },
+      { nis: "12083", nama: "SEPTRIAWAN BULAN NAWANGSARI", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11941", nama: "SOFIA NASHWA SALSABILA", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11762", nama: "SUCI SOBRIYANTI", kelas: "XII-2", jk: "Perempuan" },
+      { nis: "11871", nama: "SYAHRUL DAFFA RAFI'I", kelas: "XII-2", jk: "Laki-laki" },
+      { nis: "11764", nama: "YUANDHA DWI VALENTINA", kelas: "XII-2", jk: "Perempuan" },
+
+      // XII-3
+      { nis: "11730", nama: "ABI LANGIT ASSYADZILY", kelas: "XII-3", jk: "Laki-laki" },
+      { nis: "11914", nama: "AMELIA OLIV AGUSTIN", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "12055", nama: "ANDHIKA WAHYU BING SLAMET", kelas: "XII-3", jk: "Laki-laki" },
+      { nis: "11948", nama: "ARINI DWI WAHYUNINGTYAS", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "11989", nama: "ARIZKY ZIDNY CANDRA", kelas: "XII-3", jk: "Laki-laki" },
+      { nis: "11918", nama: "ARRAHMA RYA SYAFARA", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "12026", nama: "BIANCA MUNTIA INEKE PUTRI", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "11848", nama: "CECILLIA CITRA AYU PRATAMA", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "11879", nama: "CINTA KIRANA PRATADIVA PUTRI", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "12063", nama: "DIMAS ARDYANSYAH", kelas: "XII-3", jk: "Laki-laki" },
+      { nis: "12065", nama: "DWI RATNA ANDINI", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "11704", nama: "ELIZA FITRIA LAILI", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "11815", nama: "ERLANGGA DWI RHENA SETIAWAN", kelas: "XII-3", jk: "Laki-laki" },
+      { nis: "12036", nama: "FITRI KURNIA CANTIKA SARI", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "11672", nama: "JEFRY PRASETYO", kelas: "XII-3", jk: "Laki-laki" },
+      { nis: "11928", nama: "KASIH JATSIYAH SAJDAH", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "11886", nama: "KAVITA AZKA MALINA", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "11745", nama: "MADE PRAMUDYA", kelas: "XII-3", jk: "Laki-laki" },
+      { nis: "11824", nama: "MOCH. RAHMADANI", kelas: "XII-3", jk: "Laki-laki" },
+      { nis: "11932", nama: "MONICA AULYA DWI PRISILIA", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "11751", nama: "MUHAMMAD FAIEZ NUR HIDAYAT", kelas: "XII-3", jk: "Laki-laki" },
+      { nis: "12076", nama: "MUHAMMAD HAIKAL KAMIL MAULANA", kelas: "XII-3", jk: "Laki-laki" },
+      { nis: "11894", nama: "MUHAMMAD THORIQ AL JANNABI", kelas: "XII-3", jk: "Laki-laki" },
+      { nis: "11897", nama: "NABILA WIENDRATNO PUTRI", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "11970", nama: "NADIN DWI INDAH SARI", kelas: "XII-3", jk: "Perempuan" },
+      { nis: "11865", nama: "NADYA AN'NAS SABILAH", kelas: "XII-3", jk: "Perempuan" },
+
+      // XII-4
+      { nis: "12053", nama: "ALYSSIA MAHARANI SUHARMOKO", kelas: "XII-4", jk: "Perempuan" },
+      { nis: "12054", nama: "AMANDA APRILIA YULIANA PUTRI", kelas: "XII-4", jk: "Perempuan" },
+      { nis: "11915", nama: "ANDRA RINGGO KURNIAWAN", kelas: "XII-4", jk: "Laki-laki" },
+      { nis: "11733", nama: "ARTHA MILA RETNO KUMENYAR", kelas: "XII-4", jk: "Perempuan" },
+      { nis: "11666", nama: "BINTANG KENZA PRAMUDYA", kelas: "XII-4", jk: "Laki-laki" },
+      { nis: "12059", nama: "CARISA AURILIA PUTRI", kelas: "XII-4", jk: "Perempuan" },
+      { nis: "11811", nama: "CELLO WIDI OKTAVIANO", kelas: "XII-4", jk: "Laki-laki" },
+      { nis: "11850", nama: "CHRIESTYA PUTRI ANDHARA", kelas: "XII-4", jk: "Perempuan" },
+      { nis: "12032", nama: "DINDA PRATIWI", kelas: "XII-4", jk: "Perempuan" },
+      { nis: "11739", nama: "EVAN ANDIKA PRATAMA", kelas: "XII-4", jk: "Laki-laki" },
+      { nis: "11741", nama: "FAUZIYAH KURNIAWATI", kelas: "XII-4", jk: "Perempuan" },
+      { nis: "11742", nama: "IKE PUTRI RAHAYU", kelas: "XII-4", jk: "Perempuan" },
+      { nis: "11956", nama: "ILOFI AURELIANT APRINATA", kelas: "XII-4", jk: "Laki-laki" },
+      { nis: "11671", nama: "INDIRA DAVINANDITHA", kelas: "XII-4", jk: "Perempuan" },
+      { nis: "11819", nama: "JOVANSYAH FAWWAZ ALGHANI", kelas: "XII-4", jk: "Laki-laki" },
+      { nis: "11777", nama: "KAYLA HALIMATUS AZ ZAHRA", kelas: "XII-4", jk: "Perempuan" },
+      { nis: "11861", nama: "KIRANI NUR KUSAERI", kelas: "XII-4", jk: "Perempuan" },
+      { nis: "11961", nama: "LIFIA FAHMIL YUANITA", kelas: "XII-4", jk: "Perempuan" },
+      { nis: "12038", nama: "M. FARHAN RIZQI ABDULLAH", kelas: "XII-4", jk: "Laki-laki" },
+      { nis: "12039", nama: "MOCH. ALIFIL ALI MAULANA", kelas: "XII-4", jk: "Laki-laki" },
+      { nis: "12074", nama: "MOCHAMAD FAHRIAN AJITAMA", kelas: "XII-4", jk: "Laki-laki" },
+      { nis: "11675", nama: "MUHAMMAD AZIZIRRIZQY PUTRA", kelas: "XII-4", jk: "Laki-laki" },
+
+      // XII-5
+      { nis: "11654", nama: "A. ANDIKA EMIR FAHREZA", kelas: "XII-5", jk: "Laki-laki" },
+      { nis: "11694", nama: "ACHMAD FARDHAN FERDIANSAH", kelas: "XII-5", jk: "Laki-laki" },
+      { nis: "11839", nama: "ACHMAD FARIS PRATAMA", kelas: "XII-5", jk: "Laki-laki" },
+      { nis: "11657", nama: "AKBAR PUTRA RIYADI", kelas: "XII-5", jk: "Laki-laki" },
+      { nis: "11912", nama: "ALFAIRUS PUTRA MAHESWARA", kelas: "XII-5", jk: "Laki-laki" },
+      { nis: "11913", nama: "AMELIA FEBRIARTIKA PUTRI", kelas: "XII-5", jk: "Perempuan" },
+      { nis: "12021", nama: "ANINDYA FARKHA RAHMADANTI", kelas: "XII-5", jk: "Perempuan" },
+      { nis: "11876", nama: "ANNISYAH TRI HAPSARI PAMUNGKAS", kelas: "XII-5", jk: "Perempuan" },
+      { nis: "11877", nama: "AUFA UDYANA WILIS", kelas: "XII-5", jk: "Perempuan" },
+      { nis: "12025", nama: "AYUB BIMA SETIAWAN", kelas: "XII-5", jk: "Laki-laki" },
+      { nis: "11772", nama: "BACHTIAR ARDIANSYAH RAHMAN", kelas: "XII-5", jk: "Laki-laki" },
+      { nis: "11950", nama: "BAGAS SONI HARSONO", kelas: "XII-5", jk: "Laki-laki" },
+      { nis: "12027", nama: "BINTANG KHARISMAWAN", kelas: "XII-5", jk: "Laki-laki" },
+
+      // XII-6
+      { nis: "11838", nama: "ABDULLOH FAQIH", kelas: "XII-6", jk: "Laki-laki" },
+      { nis: "11910", nama: "ADINDA FANNY NOVITASARI", kelas: "XII-6", jk: "Perempuan" },
+      { nis: "11840", nama: "AIRA HIKMATUL AINI", kelas: "XII-6", jk: "Perempuan" },
+      { nis: "11946", nama: "AISYAH FIRYAL ANAM", kelas: "XII-6", jk: "Perempuan" },
+      { nis: "11984", nama: "AKBAR REYZA PUTRA ATMOKO", kelas: "XII-6", jk: "Laki-laki" },
+      { nis: "11804", nama: "ALFAN TORIQ", kelas: "XII-6", jk: "Laki-laki" },
+      { nis: "11842", nama: "ALVINO DAVA FABIANTO", kelas: "XII-6", jk: "Laki-laki" },
+      { nis: "11988", nama: "ANGGUN MEI PRAWESTI", kelas: "XII-6", jk: "Perempuan" },
+      { nis: "12023", nama: "ARYA HANIF MARGONO", kelas: "XII-6", jk: "Laki-laki" },
+      { nis: "12902", nama: "BINTANG PRATAMA FIRMANSYAH", kelas: "XII-6", jk: "Laki-laki" },
+      { nis: "11668", nama: "CHERYL AURALYA PUTRI SENJAYA", kelas: "XII-6", jk: "Perempuan" }
+    ];
+
+    // Data Khusus 5 Guru PAI SMAN 1 Krembung (Username NIP, Password 123456)
+    let mockGuru = [
+      { nip: "197410101998022001", nama: "Ulfatul Husna, M.Pd.", mapel: "Guru PAI", hp: "081234567801" },
+      { nip: "9910808202521102", nama: "M. ZAIM AFFAN, S.Pd.I", mapel: "Guru PAI", hp: "081234567802" },
+      { nip: "9930410202521203", nama: "ASRI WIYANTI, S.Pd.I", mapel: "Guru PAI", hp: "081234567803" },
+      { nip: "198005122010011005", nama: "Muchammad Solichul Muhtadin, S.Pd.I", mapel: "Guru PAI", hp: "081234567804" },
+      { nip: "198503202014021003", nama: "Anas Imron Hamza, S.Pd.", mapel: "Guru PAI", hp: "081234567805" }
+    ];
+
+    let mockLogs = [
+      { timestamp: "08/08/2026 06:45", nama: "ADAMA SEPTIAN KURNIAWAN", nis: "11731", status: "Kehadiran di Kelas PAI", keterangan: "Hadir / Tepat Waktu", lokasi: "-7.48, 112.65", diinputOleh: "Sistem QR" },
+      { timestamp: "08/08/2026 07:15", nama: "AJENG PUTRI RAHMAWATI", nis: "11875", status: "Sholat Dhuha", keterangan: "Hadir / Tepat Waktu", lokasi: "-7.48, 112.65", diinputOleh: "Mandiri (Murid)" }
+    ];
+
+    // Initialize Lucide Icons
+    window.onload = function() {
+      lucide.createIcons();
+      initGeolocation();
+    };
+
+    function initGeolocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(pos) {
+            userLocation = pos.coords.latitude.toFixed(5) + ", " + pos.coords.longitude.toFixed(5);
+            document.getElementById("dashGpsText").innerText = "📍 GPS Terkunci: " + userLocation;
+          },
+          function(err) {
+            document.getElementById("dashGpsText").innerText = "📍 GPS Matikan/Tidak Diizinkan";
+          }
+        );
+      }
+    }
+
+    function setLoginRole(role) {
+      document.getElementById('loginRole').value = role;
+      const btnMurid = document.getElementById('btnRoleMurid');
+      const btnGuru = document.getElementById('btnRoleGuru');
+      const lblUser = document.getElementById('lblUsername');
+      const lblPass = document.getElementById('lblPassword');
+      const passHint = document.getElementById('passwordHint');
+
+      if (role === 'murid') {
+        btnMurid.className = "flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 bg-white text-emerald-700 shadow-sm";
+        btnGuru.className = "flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900";
+        lblUser.innerText = "NIS (Nomor Induk Siswa)";
+        lblPass.innerText = "Password (Gunakan NIS)";
+        passHint.innerText = "*Gunakan NIS anda sebagai password default murid.";
+      } else {
+        btnGuru.className = "flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 bg-white text-emerald-700 shadow-sm";
+        btnMurid.className = "flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900";
+        lblUser.innerText = "NIP Guru PAI";
+        lblPass.innerText = "Password Guru (123456)";
+        passHint.innerText = "*Gunakan NIP sebagai username dan password default: 123456";
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const role = document.getElementById('loginRole').value;
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+
+      const btn = document.getElementById('btnLoginSubmit');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span> Memeriksa...`;
+
+      // Cek apakah fungsi google.script.run tersedia (Running di Apps Script)
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            btn.disabled = false;
+            btn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i> <span>Masuk Aplikasi</span>`;
+            lucide.createIcons();
+            
+            if (res.success) {
+              currentUser = res.user;
+              showMainScreen();
+              showToast("Selamat datang " + currentUser.nama, "success");
+            } else {
+              showToast(res.message, "error");
+            }
+          })
+          .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i> <span>Masuk Aplikasi</span>`;
+            showToast("Gagal terhubung server", "error");
+          })
+          .loginUser(role, username, password);
+      } else {
+        // Mock Fallback jika dibuka langsung di Browser/Preview
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i> <span>Masuk Aplikasi</span>`;
+          lucide.createIcons();
+
+          if (role === 'guru') {
+            if (password !== "123456") {
+              showToast("Password Guru salah! Gunakan: 123456", "error");
+              return;
+            }
+            const foundGuru = mockGuru.find(g => g.nip === username.trim());
+            if (foundGuru) {
+              currentUser = { role: 'guru', nisNip: foundGuru.nip, nama: foundGuru.nama, mapel: foundGuru.mapel };
+            } else {
+              currentUser = { role: 'guru', nisNip: username, nama: 'Guru PAI SMANIKRE', mapel: 'Pendidikan Agama Islam' };
+            }
+          } else {
+            const foundSiswa = mockSiswa.find(s => s.nis === username.trim());
+            if (foundSiswa) {
+              currentUser = { role: 'murid', nisNip: foundSiswa.nis, nama: foundSiswa.nama, kelas: foundSiswa.kelas };
+            } else {
+              currentUser = { role: 'murid', nisNip: username || '11731', nama: 'ADAMA SEPTIAN KURNIAWAN', kelas: 'XII-1' };
+            }
+          }
+          showMainScreen();
+          showToast("Berhasil masuk!", "success");
+        }, 600);
+      }
+    }
+
+    function showMainScreen() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainScreen').classList.remove('hidden');
+
+      // Update Header & Welcome Banner secara Dinamis berdasarkan User yang Login
+      document.getElementById('dashWelcome').innerText = "Selamat Datang, " + currentUser.nama + "!";
+      document.getElementById('navUserName').innerText = currentUser.nama;
+      document.getElementById('navUserRole').innerText = currentUser.role === 'guru' ? (currentUser.mapel || 'Guru PAI') : ('Murid - ' + (currentUser.kelas || 'SMANIKRE'));
+      document.getElementById('userAvatar').innerText = currentUser.nama.charAt(0).toUpperCase();
+
+      // Configure views & visible menu items based on role
+      if (currentUser.role === 'guru') {
+        document.getElementById('navScanText').innerText = "Scan QR Murid";
+        document.getElementById('viewScanGuru').classList.remove('hidden');
+        document.getElementById('viewScanMurid').classList.add('hidden');
+
+        // Show all menus for teacher
+        document.getElementById('nav-datasiswa').style.display = 'flex';
+        document.getElementById('nav-dataguru').style.display = 'flex';
+        document.getElementById('nav-kelola').style.display = 'flex';
+        document.getElementById('mb-datasiswa').style.display = 'flex';
+      } else {
+        document.getElementById('navScanText').innerText = "Kartu Absensi & Presensi";
+        document.getElementById('viewScanGuru').classList.add('hidden');
+        document.getElementById('viewScanMurid').classList.remove('hidden');
+
+        // Hide teacher-only menus for student role
+        document.getElementById('nav-datasiswa').style.display = 'none';
+        document.getElementById('nav-dataguru').style.display = 'none';
+        document.getElementById('nav-kelola').style.display = 'none';
+        document.getElementById('mb-datasiswa').style.display = 'none';
+        
+        // Populate Student Card View dynamically with current student info
+        document.getElementById('cardStudentName').innerText = currentUser.nama;
+        document.getElementById('cardStudentNis').innerText = "NIS: " + currentUser.nisNip;
+        document.getElementById('cardStudentClass').innerText = "Kelas: " + (currentUser.kelas || "SMANIKRE");
+        
+        // Generate Student QR Code based on NIS
+        generateQrCode("qrcodeDisplay", currentUser.nisNip);
+      }
+
+      // Load initial data
+      refreshData();
+      navigateTo('dashboard');
+    }
+
+    function handleLogout() {
+      stopQrScanner();
+      currentUser = null;
+      document.getElementById('mainScreen').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      showToast("Anda telah keluar.", "info");
+    }
+
+    function navigateTo(pageId) {
+      // Hide all pages
+      document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+      document.getElementById('page-' + pageId).classList.remove('hidden');
+
+      // Reset Sidebar active styles
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-50', 'text-emerald-700');
+        btn.classList.add('text-slate-600');
+      });
+
+      const activeNav = document.getElementById('nav-' + pageId);
+      if (activeNav) {
+        activeNav.classList.add('bg-emerald-50', 'text-emerald-700');
+        activeNav.classList.remove('text-slate-600');
+      }
+
+      // Handle scanner lifecycle
+      if (pageId === 'scan' && currentUser.role === 'guru') {
+        startQrScanner();
+      } else {
+        stopQrScanner();
+      }
+    }
+
+    function refreshData() {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(renderLogs).getPresensiLogs();
+        google.script.run.withSuccessHandler(renderMasterSiswa).getMasterSiswa();
+        google.script.run.withSuccessHandler(renderMasterGuru).getMasterGuru();
+      } else {
+        renderLogs(mockLogs);
+        renderMasterSiswa(mockSiswa);
+        renderMasterGuru(mockGuru);
+      }
+    }
+
+    function renderLogs(logs) {
+      const tbodyRecent = document.getElementById('tblRecentLog');
+      const tbodyReport = document.getElementById('tblLaporanAbsen');
+
+      let countMasuk = 0, countPulang = 0, countIzin = 0, countDispen = 0;
+
+      if (!logs || logs.length === 0) {
+        tbodyRecent.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-slate-400">Belum ada data presensi.</td></tr>`;
+        tbodyReport.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-slate-400">Belum ada data presensi.</td></tr>`;
+        return;
+      }
+
+      let recentHtml = '';
+      let reportHtml = '';
+
+      logs.forEach((log, idx) => {
+        if (log.status === 'Masuk' || log.status.includes('Kehadiran') || log.status.includes('Sholat')) countMasuk++;
+        if (log.status === 'Pulang') countPulang++;
+        if (['Sakit', 'Ijin', 'Alpha', 'Halangan / Haid (Khusus Putri)'].includes(log.keterangan)) countIzin++;
+        if (log.keterangan === 'Dispensasi') countDispen++;
+
+        const badgeClass = log.status === 'Masuk' || log.status.includes('Kehadiran') ? 'bg-emerald-100 text-emerald-800' : 'bg-sky-100 text-sky-800';
+
+        if (idx < 5) {
+          recentHtml += `
+            <tr class="hover:bg-slate-50">
+              <td class="p-2.5 font-medium text-slate-500">${log.timestamp}</td>
+              <td class="p-2.5 font-bold text-slate-800">${log.nama}</td>
+              <td class="p-2.5 text-slate-600">${log.nis}</td>
+              <td class="p-2.5"><span class="px-2 py-0.5 rounded-full font-bold text-[10px] ${badgeClass}">${log.status}</span></td>
+              <td class="p-2.5 text-slate-600">${log.keterangan}</td>
+            </tr>
+          `;
+        }
+
+        reportHtml += `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 font-medium text-slate-500">${log.timestamp}</td>
+            <td class="p-3 font-bold text-slate-800">${log.nama}</td>
+            <td class="p-3 text-slate-600">${log.nis}</td>
+            <td class="p-3"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] ${badgeClass}">${log.status}</span></td>
+            <td class="p-3 text-slate-600">${log.keterangan}</td>
+            <td class="p-3 text-slate-400 text-[11px]">${log.lokasi || '-'}</td>
+          </tr>
+        `;
+      });
+
+      tbodyRecent.innerHTML = recentHtml;
+      tbodyReport.innerHTML = reportHtml;
+
+      // Update counters
+      document.getElementById('statMasuk').innerText = countMasuk;
+      document.getElementById('statPulang').innerText = countPulang;
+      document.getElementById('statIzin').innerText = countIzin;
+      document.getElementById('statDispen').innerText = countDispen;
+    }
+
+    function renderMasterSiswa(siswaList) {
+      const tbody = document.getElementById('tblMasterSiswa');
+      const selectKelola = document.getElementById('kelolaSelectSiswa');
+
+      if (!siswaList || siswaList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-slate-400">Data siswa kosong.</td></tr>`;
+        return;
+      }
+
+      let html = '';
+      let optionsHtml = '<option value="">-- Pilih Siswa --</option>';
+
+      siswaList.forEach(s => {
+        html += `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 font-bold text-emerald-700">${s.nis}</td>
+            <td class="p-3 font-semibold text-slate-800">${s.nama}</td>
+            <td class="p-3 text-slate-600">${s.kelas}</td>
+            <td class="p-3 text-slate-600">${s.jk}</td>
+            <td class="p-3 text-center">
+              <button onclick="showQrModal('${s.nama}', '${s.nis}')" class="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg font-bold text-[11px] transition inline-flex items-center gap-1">
+                <i data-lucide="qr-code" class="w-3.5 h-3.5"></i> QR Kartu
+              </button>
+            </td>
+          </tr>
+        `;
+        optionsHtml += `<option value="${s.nis}|${s.nama}">${s.nama} (${s.nis})</option>`;
+      });
+
+      tbody.innerHTML = html;
+      selectKelola.innerHTML = optionsHtml;
+      lucide.createIcons();
+    }
+
+    function renderMasterGuru(guruList) {
+      const tbody = document.getElementById('tblMasterGuru');
+      if (!guruList || guruList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Data guru kosong.</td></tr>`;
+        return;
+      }
+
+      let html = '';
+      guruList.forEach(g => {
+        html += `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 font-bold text-slate-700">${g.nip}</td>
+            <td class="p-3 font-semibold text-slate-800">${g.nama}</td>
+            <td class="p-3 text-slate-600">${g.mapel}</td>
+            <td class="p-3 text-slate-600">${g.hp}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function startQrScanner() {
+      if (html5QrScanner) return;
+
+      html5QrScanner = new Html5Qrcode("qr-reader");
+      html5QrScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        onScanSuccess,
+        onScanFailure
+      ).catch(err => {
+        console.log("Kamera gagal:", err);
+      });
+    }
+
+    function stopQrScanner() {
+      if (html5QrScanner) {
+        html5QrScanner.stop().then(() => {
+          html5QrScanner.clear();
+          html5QrScanner = null;
+        }).catch(err => console.log(err));
+      }
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      stopQrScanner();
+      showToast("QR Code Terdeteksi! NIS: " + decodedText, "info");
+      
+      // Auto submit presensi dari QR
+      savePresensiData({
+        nis: decodedText,
+        nama: "Siswa (NIS: " + decodedText + ")",
+        status: "Kehadiran di Kelas PAI",
+        keterangan: "Hadir / Tepat Waktu",
+        lokasi: userLocation,
+        diinputOleh: "Guru (Scan QR)"
+      });
+    }
+
+    function onScanFailure(error) {
+      // Ignore scan failure noise
+    }
+
+    function handleSelfPresensi(e) {
+      e.preventDefault();
+      const kategori = document.getElementById('selfKategori').value;
+      const keterangan = document.getElementById('selfKeterangan').value;
+
+      savePresensiData({
+        nis: currentUser.nisNip,
+        nama: currentUser.nama,
+        status: kategori, // Kehadiran di Kelas / Sholat Dhuha / Dzuhur / Ashar
+        keterangan: keterangan,
+        lokasi: userLocation,
+        diinputOleh: "Mandiri (Murid)"
+      });
+    }
+
+    function handleManualInput(e) {
+      e.preventDefault();
+      const siswaVal = document.getElementById('kelolaSelectSiswa').value;
+      if (!siswaVal) {
+        showToast("Pilih siswa terlebih dahulu!", "error");
+        return;
+      }
+      const [nis, nama] = siswaVal.split('|');
+      const status = document.getElementById('kelolaStatus').value;
+      const keterangan = document.getElementById('kelolaKeterangan').value;
+
+      savePresensiData({
+        nis: nis,
+        nama: nama,
+        status: status,
+        keterangan: keterangan,
+        lokasi: userLocation,
+        diinputOleh: currentUser.nama + " (Guru)"
+      });
+    }
+
+    function savePresensiData(dataObj) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res.success) {
+              showToast(res.message, "success");
+              refreshData();
+            } else {
+              showToast(res.message, "error");
+            }
+          })
+          .simpanPresensi(dataObj);
+      } else {
+        // Mock execution
+        const newLog = {
+          timestamp: new Date().toLocaleString('id-ID'),
+          nama: dataObj.nama,
+          nis: dataObj.nis,
+          status: dataObj.status,
+          keterangan: dataObj.keterangan,
+          lokasi: dataObj.lokasi,
+          diinputOleh: dataObj.diinputOleh
+        };
+        mockLogs.unshift(newLog);
+        renderLogs(mockLogs);
+        showToast("Presensi berhasil dicatat (Demo Mode)!", "success");
+      }
+    }
+
+    function generateQrCode(elementId, text) {
+      const container = document.getElementById(elementId);
+      container.innerHTML = "";
+      new QRCode(container, {
+        text: text,
+        width: 140,
+        height: 140,
+        colorDark: "#065f46",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    function showQrModal(nama, nis) {
+      document.getElementById('modalStudentName').innerText = nama;
+      document.getElementById('modalStudentNis').innerText = "NIS: " + nis;
+      generateQrCode("modalQrCode", nis);
+      document.getElementById('qrModal').classList.remove('hidden');
+    }
+
+    function closeQrModal() {
+      document.getElementById('qrModal').classList.add('hidden');
+    }
+
+    function filterTabelSiswa() {
+      const q = document.getElementById('searchSiswa').value.toLowerCase();
+      const rows = document.querySelectorAll('#tblMasterSiswa tr');
+      rows.forEach(r => {
+        const text = r.innerText.toLowerCase();
+        r.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    function showToast(msg, type = "success") {
+      const toast = document.getElementById('toast');
+      const toastTitle = document.getElementById('toastTitle');
+      const toastMsg = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.innerText = msg;
+      if (type === 'success') {
+        toastTitle.innerText = 'Berhasil';
+        toastIcon.className = "p-2 rounded-xl text-white bg-emerald-600 flex-shrink-0";
+      } else if (type === 'error') {
+        toastTitle.innerText = 'Gagal';
+        toastIcon.className = "p-2 rounded-xl text-white bg-rose-600 flex-shrink-0";
+      } else {
+        toastTitle.innerText = 'Informasi';
+        toastIcon.className = "p-2 rounded-xl text-white bg-sky-600 flex-shrink-0";
+      }
+
+      toast.classList.remove('translate-x-full');
+      setTimeout(() => {
+        toast.classList.add('translate-x-full');
+      }, 3500);
+    }
+
+    function closeToast() {
+      document.getElementById('toast').classList.add('translate-x-full');
+    }
+
+    function exportToCsv() {
+      let csvContent = "data:text/csv;charset=utf-8,Timestamp,Nama,NIS,Status,Keterangan,Lokasi\n";
+      mockLogs.forEach(r => {
+        csvContent += `"${r.timestamp}","${r.nama}","${r.nis}","${r.status}","${r.keterangan}","${r.lokasi}"\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "Laporan_Presensi_SIAP_SMANIKRE.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
