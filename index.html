@@ -1049,6 +1049,8 @@
 
             if (tabName !== 'presensi') {
                 stopQrScanner();
+            } else {
+                startQrScanner();
             }
         }
 
@@ -1215,24 +1217,41 @@
             }
         }
 
-        function startQrScanner() {
-            if (html5QrScanner) {
-                stopQrScanner();
+        async function startQrScanner() {
+            const resultDiv = document.getElementById('qr-reader-results');
+            
+            try {
+                if (!html5QrScanner) {
+                    html5QrScanner = new Html5Qrcode("qr-reader");
+                } else if (html5QrScanner.isScanning) {
+                    return;
+                }
+
+                resultDiv.innerText = "Mengakses kamera...";
+                
+                await html5QrScanner.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 220, height: 220 } },
+                    onScanSuccess,
+                    onScanFailure
+                );
+                
+                resultDiv.innerText = "Kamera aktif! Arahkan QR Code ke kamera.";
+            } catch (err) {
+                console.error("Gagal mengaktifkan kamera:", err);
+                resultDiv.innerText = "Gagal mengakses kamera. Pastikan izin kamera sudah diberikan di browser.";
             }
-
-            html5QrScanner = new Html5QrcodeScanner(
-                "qr-reader",
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                /* verbose= */ false
-            );
-
-            html5QrScanner.render(onScanSuccess, onScanFailure);
         }
 
-        function stopQrScanner() {
+        async function stopQrScanner() {
             if (html5QrScanner) {
-                html5QrScanner.clear().catch(error => console.error("Failed to clear scanner", error));
-                html5QrScanner = null;
+                try {
+                    if (html5QrScanner.isScanning) {
+                        await html5QrScanner.stop();
+                    }
+                } catch (err) {
+                    console.error("Error stopping scanner:", err);
+                }
             }
         }
 
